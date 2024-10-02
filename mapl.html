@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта с добавлением меток</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Инициализация карты на полный экран
+        var map = L.map('map').setView([55.751244, 37.618423], 10); // Координаты Москвы
+
+        // Загрузка тайлов карты OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Обработка клика на карте для добавления метки
+        function onMapClick(e) {
+            var formHTML = `
+                <form id="markerForm">
+                    <label>Город:</label><br>
+                    <input type="text" id="city" required><br>
+                    <label>Улица:</label><br>
+                    <input type="text" id="street" required><br>
+                    <label>Номер дома и квартиры:</label><br>
+                    <input type="text" id="house" required><br>
+                    <label>Подъезд:</label><br>
+                    <input type="text" id="entrance"><br>
+                    <label>Этаж:</label><br>
+                    <input type="text" id="floor"><br>
+                    <label>Телефон или Instagram:</label><br>
+                    <input type="text" id="contact"><br>
+                    <label>Фотографии:</label><br>
+                    <input type="file" id="photos" multiple><br><br>
+                    <button type="button" onclick="saveMarker(${e.latlng.lat}, ${e.latlng.lng})">Добавить метку</button>
+                </form>
+            `;
+
+            // Отображение формы в всплывающем окне (попапе)
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(formHTML)
+                .openOn(map);
+        }
+
+        // Функция для сохранения метки с данными
+        function saveMarker(lat, lng) {
+            // Получение данных из формы
+            var city = document.getElementById('city').value;
+            var street = document.getElementById('street').value;
+            var house = document.getElementById('house').value;
+            var entrance = document.getElementById('entrance').value;
+            var floor = document.getElementById('floor').value;
+            var contact = document.getElementById('contact').value;
+            var photos = document.getElementById('photos').files;
+
+            // Формирование описания для попапа
+            var description = `
+                <b>Город:</b> ${city}<br>
+                <b>Улица:</b> ${street}, дом ${house}, подъезд ${entrance}, этаж ${floor}<br>
+                <b>Контакты:</b> ${contact}<br>
+            `;
+
+            // Если были выбраны фотографии, добавляем информацию о них
+            if (photos.length > 0) {
+                description += '<b>Фотографии:</b><br>';
+                for (var i = 0; i < photos.length; i++) {
+                    description += `Файл: ${photos[i].name}<br>`;
+                }
+            }
+
+            // Добавляем метку на карту
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(description)
+                .openPopup();
+
+            // Закрытие попапа после добавления метки
+            map.closePopup();
+        }
+
+        // Добавление обработчика клика на карту
+        map.on('click', onMapClick);
+    </script>
+</body>
+</html>
